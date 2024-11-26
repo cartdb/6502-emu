@@ -233,6 +233,7 @@ yr2 = []
 sr2 = []
 cyc2 = []
 s = []
+oldSR = []
 while True:
     line = testFile.readline()
     if not line:
@@ -506,15 +507,16 @@ while running:
         cyc += 2
         flag = True
     elif "PHP" in asm[file[ins]]:
-        oldPC = sr
-        if oldPC&2**4 == 0:
-            oldPC += 2**4
+        oldSR.append(sr)
+        if oldSR[len(oldSR) - 1]&2**4 == 0:
+            oldSR[len(oldSR) - 1] += 2**4
         sp -= 1
         length = 1
         cyc += 3
         flag = True
     elif "PLA" in asm[file[ins]]:
-        ac = oldPC
+        ac = oldSR[len(oldSR) - 1]
+        oldSR.pop(len(oldSR) - 1)
         if ac == 0:
             if sr&2**1 == 0:
                 sr += 2**1
@@ -580,13 +582,14 @@ while running:
         cyc += 2
         flag = True
     elif "PHA" in asm[file[ins]]:
-        oldPC = ac
+        oldSR.append(ac)
         sp -= 1
         length = 1
         cyc += 3
         flag = True
     elif "PLP" in asm[file[ins]]:
-        sr = oldPC
+        sr = oldSR[len(oldSR) - 1]
+        oldSR.pop(len(oldSR) - 1)
         if sr&2**4 != 0:
             sr -= 2**4
         if sr&2**5 == 0:
@@ -870,6 +873,120 @@ while running:
                 sr += 2**7
         length = 1
         cyc += 2
+        flag = True
+    elif "TAY" in asm[file[ins]]:
+        yr = ac
+        if yr == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if yr&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 1
+        cyc += 2
+        flag = True
+    elif "TAX" in asm[file[ins]]:
+        xr = ac
+        if xr == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if xr&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 1
+        cyc += 2
+        flag = True
+    elif "TYA" in asm[file[ins]]:
+        ac = yr
+        if ac == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if ac&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 1
+        cyc += 2
+        flag = True
+    elif "TXA" in asm[file[ins]]:
+        ac = xr
+        if ac == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if ac&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 1
+        cyc += 2
+        flag = True
+    elif "TSX" in asm[file[ins]]:
+        xr = sp
+        if xr == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if xr&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 1
+        cyc += 2
+        flag = True
+    elif "STX $" in asm[file[ins]] and "," not in asm[file[ins]] and len(asm[file[ins]].split("$")[1]) == 4:
+        m = int(asm[file[ins]].split("$")[1], 16)
+        bytesArr[m] = xr
+        length = 3
+        cyc += 4
+        flag = True
+    elif "TXS" in asm[file[ins]]:
+        sp = xr
+        length = 1
+        cyc += 2
+        flag = True
+    elif "LDX $" in asm[file[ins]] and "," not in asm[file[ins]]:
+        m = int(asm[file[ins]].split("$")[1], 16)
+        xr = bytesArr[m]
+        if xr == 0:
+            if sr&2**1 == 0:
+                sr += 2**1
+        else:
+            if sr&2**1 != 0:
+                sr -= 2**1
+        if xr&2**7 != 0:
+            if sr&2**7 == 0:
+                sr += 2**7
+        else:
+            if sr&2**7 != 0:
+                sr -= 2**7
+        length = 3
+        cyc += 4
         flag = True
     if flag == False:
         running = False
